@@ -1,0 +1,6 @@
+[package]
+name = "middleware-fn"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
