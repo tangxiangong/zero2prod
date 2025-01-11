@@ -24,4 +24,6 @@ impl IntoResponse for AppError {
     }
 }
 
+#[allow(dead_code)]
+/// 自定义结果类型
 pub type AppResult<T, M> = Result<AppResponse<T, M>, AppError>;
