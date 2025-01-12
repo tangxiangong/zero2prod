@@ -1,4 +1,4 @@
-use crate::utils::Meta;
+use crate::meta::Meta;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;

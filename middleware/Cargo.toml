@@ -1,5 +1,5 @@
 [package]
-name = "middleware-fn"
+name = "middleware"
 edition.workspace = true
 version.workspace = true
 

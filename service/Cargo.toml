@@ -1,9 +1,8 @@
 [package]
-name = "api"
+name = "service"
 edition.workspace = true
 version.workspace = true
 
 [dependencies]
 axum = { workspace = true }
-service = { path = "../service" }
-sqlx = { workspace = true }
+common = { path = "../common" }

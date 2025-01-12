@@ -1,5 +1,7 @@
-pub mod response;
-
+mod response;
 pub use response::AppResponse;
 mod error;
-pub mod utils;
+pub use error::{AppError, AppResult};
+mod meta;
+pub use meta::Meta;
+pub mod dto;

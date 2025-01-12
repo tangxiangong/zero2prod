@@ -1,14 +1,12 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use axum::routing::get;
+use axum::Router;
+use service::general;
+use sqlx::MySqlPool;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub type StateRouter = Router<MySqlPool>;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn compose() -> StateRouter {
+    Router::new()
+        .route("/", get(general::index))
+        .route("/health", get(general::health))
 }
