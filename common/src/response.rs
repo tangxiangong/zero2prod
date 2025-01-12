@@ -20,8 +20,7 @@ use serde_json::json;
 #[derive(Serialize)]
 pub struct AppResponse<T = (), M = ()>
 where
-    T: Serialize,
-    M: Serialize + Meta,
+    M: Meta,
 {
     #[serde(rename = "success")]
     status: bool,
