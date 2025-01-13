@@ -1,16 +1,24 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    extract::{rejection::FormRejection, State},
+    http::StatusCode,
+    Form,
+};
 use common::{
-    dto::subscription::{CreateSubscription, Subscription, SubscriptionMeta},
+    dto::subscription::{MakeSubscription, Subscription, SubscriptionMeta},
     AppResponse, AppResult, ResponseDetail,
 };
 use database::crud::subscription as db;
 use sqlx::MySqlPool;
 
-pub async fn create(
+/// make a new subscription
+/// POST /subscription
+/// Parse the x-www-form-urlencoded body into a `MakeSubscription` struct
+pub async fn make(
     State(pool): State<MySqlPool>,
-    Json(create_sub): Json<CreateSubscription>,
+    payload: Result<Form<MakeSubscription>, FormRejection>,
 ) -> AppResult<AppResponse<Subscription>> {
-    let sub = Subscription::from(create_sub);
+    let make_sub = payload?.0;
+    let sub = Subscription::from(make_sub);
     db::create(&pool, &sub).await?;
     Ok((
         StatusCode::CREATED,

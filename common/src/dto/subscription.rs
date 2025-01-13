@@ -47,12 +47,12 @@ impl Subscription {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreateSubscription {
-    email: String,
+pub struct MakeSubscription {
     name: String,
+    email: String,
 }
 
-impl CreateSubscription {
+impl MakeSubscription {
     pub fn new(email: impl Into<String>, name: impl Into<String>) -> Self {
         Self {
             email: email.into(),
@@ -69,13 +69,13 @@ impl CreateSubscription {
     }
 }
 
-impl From<CreateSubscription> for Subscription {
-    fn from(create_subsription: CreateSubscription) -> Self {
+impl From<MakeSubscription> for Subscription {
+    fn from(make_sub: MakeSubscription) -> Self {
         let id = Uuid::new_v4().as_u128() as u64;
         Self {
             id,
-            email: create_subsription.email,
-            name: create_subsription.name,
+            email: make_sub.email,
+            name: make_sub.name,
             subscribed_at: Utc::now().naive_utc(),
         }
     }

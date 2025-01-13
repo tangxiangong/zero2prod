@@ -6,7 +6,7 @@ use sqlx::{query, query_as, MySqlPool};
 
 pub async fn create(pool: &MySqlPool, subscription: &Subscription) -> AppResult<()> {
     query!(
-        r#"INSERT INTO `subscription` (`id`, `email`, `name`, `subscribed_at`) VALUES (?, ?, ?, ?)"#,
+        "INSERT INTO `subscription` (`id`, `email`, `name`, `subscribed_at`) VALUES (?, ?, ?, ?)",
         subscription.id(),
         subscription.email(),
         subscription.name(),
