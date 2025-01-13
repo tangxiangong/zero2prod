@@ -1,15 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-    "api",
-    "app",
-    "common",
-    "config",
-    "service",
-    "middleware",
-    "database",
-    "utils",
-]
+members = ["api", "app", "common", "service", "middleware", "database", "utils"]
 
 
 [workspace.package]
