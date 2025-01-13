@@ -1,0 +1,82 @@
+use crate::meta::Meta;
+use chrono::NaiveDateTime;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct Subscription {
+    id: u64,
+    email: String,
+    name: String,
+    subscribed_at: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SubscriptionMeta {
+    count: usize,
+}
+
+impl SubscriptionMeta {
+    pub fn new(count: usize) -> Self {
+        Self { count }
+    }
+}
+
+impl Meta for SubscriptionMeta {
+    type Item = Subscription;
+}
+
+impl Subscription {
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
+    pub fn email(&self) -> String {
+        self.email.clone()
+    }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn subscribed_at(&self) -> NaiveDateTime {
+        self.subscribed_at
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateSubscription {
+    email: String,
+    name: String,
+}
+
+impl CreateSubscription {
+    pub fn new(email: impl Into<String>, name: impl Into<String>) -> Self {
+        Self {
+            email: email.into(),
+            name: name.into(),
+        }
+    }
+
+    pub fn email(&self) -> String {
+        self.email.clone()
+    }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+}
+
+impl From<CreateSubscription> for Subscription {
+    fn from(create_subsription: CreateSubscription) -> Self {
+        let id = Uuid::new_v4().as_u128() as u64;
+        Self {
+            id,
+            email: create_subsription.email,
+            name: create_subsription.name,
+            subscribed_at: Utc::now().naive_utc(),
+        }
+    }
+}

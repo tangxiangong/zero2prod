@@ -1,4 +1,4 @@
-use crate::AppResponse;
+use crate::{AppResponse, ResponseDetail};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use thiserror::Error;
@@ -10,11 +10,16 @@ pub enum AppError {
     IOError(#[from] std::io::Error),
     #[error("Internal Server Error")]
     InternalError,
+    #[error("SQL Error: {0}")]
+    SQLError(#[from] sqlx::Error),
 }
 
 impl From<AppError> for AppResponse {
     fn from(error: AppError) -> Self {
-        AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, &error.to_string())
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ResponseDetail::error(StatusCode::INTERNAL_SERVER_ERROR, &error.to_string()),
+        )
     }
 }
 
@@ -24,6 +29,5 @@ impl IntoResponse for AppError {
     }
 }
 
-#[allow(dead_code)]
 /// 自定义结果类型
-pub type AppResult<T, M> = Result<AppResponse<T, M>, AppError>;
+pub type AppResult<T> = Result<T, AppError>;

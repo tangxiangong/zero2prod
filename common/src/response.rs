@@ -18,7 +18,7 @@ use serde_json::json;
 /// - `data:Option<T>` **响应数据**
 /// - `metadata:Option<M>` **响应数据对应的元数据**
 #[derive(Serialize)]
-pub struct AppResponse<T = (), M = ()>
+pub struct ResponseDetail<T = (), M = ()>
 where
     M: Meta,
 {
@@ -35,7 +35,9 @@ where
     metadata: Option<M>,
 }
 
-impl<T: Serialize, M: Serialize + Meta> Default for AppResponse<T, M> {
+pub type AppResponse<T = (), M = ()> = (StatusCode, ResponseDetail<T, M>);
+
+impl<T: Serialize, M: Serialize + Meta> Default for ResponseDetail<T, M> {
     fn default() -> Self {
         Self {
             status: true,
@@ -49,7 +51,7 @@ impl<T: Serialize, M: Serialize + Meta> Default for AppResponse<T, M> {
     }
 }
 
-impl<T: Serialize, M: Serialize + Meta> AppResponse<T, M> {
+impl<T: Serialize, M: Serialize + Meta> ResponseDetail<T, M> {
     pub fn success(status_code: StatusCode, data: T) -> Self {
         Self {
             status_code: status_code.as_u16(),
@@ -80,7 +82,7 @@ impl<T: Serialize, M: Serialize + Meta> AppResponse<T, M> {
     }
 }
 
-impl From<StatusCode> for AppResponse {
+impl From<StatusCode> for ResponseDetail {
     fn from(code: StatusCode) -> Self {
         Self {
             status_code: code.as_u16(),
@@ -90,7 +92,7 @@ impl From<StatusCode> for AppResponse {
     }
 }
 
-impl<T: Serialize, M: Serialize + Meta> IntoResponse for AppResponse<T, M> {
+impl<T: Serialize, M: Serialize + Meta> IntoResponse for ResponseDetail<T, M> {
     fn into_response(self) -> Response {
         Json(json!(self)).into_response()
     }

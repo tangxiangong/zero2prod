@@ -1,5 +1,3 @@
-use ::api;
-use dotenvy::dotenv;
 use sqlx::mysql::MySqlPoolOptions;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -7,7 +5,7 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set");

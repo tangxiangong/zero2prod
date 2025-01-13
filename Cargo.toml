@@ -7,7 +7,8 @@ members = [
     "config",
     "service",
     "middleware",
-    "database", "utils",
+    "database",
+    "utils",
 ]
 
 
@@ -38,3 +39,7 @@ sqlx = { version = "0.8", features = [
     "json",
     "tls-rustls-ring-native-roots",
 ] }
+uuid = { version = "1", features = ["v4", "fast-rng"] }
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3
