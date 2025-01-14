@@ -4,21 +4,23 @@ use common::{
 };
 use sqlx::{query, query_as, MySqlPool};
 
-pub async fn create(pool: &MySqlPool, subscription: &Subscription) -> AppResult<()> {
+/// 增
+pub async fn create(pool: &MySqlPool, sub: &Subscription) -> AppResult<()> {
     query!(
-        "INSERT INTO `subscription` (`id`, `email`, `name`, `subscribed_at`) VALUES (?, ?, ?, ?)",
-        subscription.id(),
-        subscription.email(),
-        subscription.name(),
-        subscription.subscribed_at()
+        "INSERT INTO subscription (id, email, name, subscribed_at) VALUES (?, ?, ?, ?)",
+        sub.id(),
+        sub.email(),
+        sub.name(),
+        sub.subscribed_at()
     )
     .execute(pool)
     .await?;
     Ok(())
 }
 
+/// 查
 pub async fn list(pool: &MySqlPool) -> AppResult<(SubscriptionMeta, Vec<Subscription>)> {
-    let subscriptions: Vec<Subscription> = query_as("SELECT * FROM `subscription`")
+    let subscriptions = query_as!(Subscription, "SELECT * FROM subscription")
         .fetch_all(pool)
         .await?;
     let meta = SubscriptionMeta::new(subscriptions.len());

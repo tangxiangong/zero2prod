@@ -12,6 +12,15 @@ pub struct AppError {
     message: String,
 }
 
+impl AppError {
+    pub fn new(status_code: impl Into<StatusCode>, message: impl Into<String>) -> Self {
+        Self {
+            status_code: status_code.into(),
+            message: message.into(),
+        }
+    }
+}
+
 impl std::error::Error for AppError {
     fn description(&self) -> &str {
         &self.message
@@ -24,7 +33,7 @@ impl std::fmt::Display for AppError {
     }
 }
 
-// 使用 ？ 将其他错误自动转换为自定义错误，当返回值为 AppResult 时
+// 使用 ？ 将其他错误自动转换为自定义错误，当返回值为 AppResult 时 //
 
 /// IO 错误转换为自定义错误
 impl From<std::io::Error> for AppError {

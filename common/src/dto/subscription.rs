@@ -1,16 +1,15 @@
 use crate::meta::Meta;
-use chrono::NaiveDateTime;
-use chrono::Utc;
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, FromRow)]
 pub struct Subscription {
-    id: u64,
-    email: String,
-    name: String,
-    subscribed_at: NaiveDateTime,
+    pub id: u64,
+    pub email: String,
+    pub name: String,
+    pub subscribed_at: DateTime<Local>,
 }
 
 #[derive(Debug, Serialize)]
@@ -41,7 +40,7 @@ impl Subscription {
         self.name.clone()
     }
 
-    pub fn subscribed_at(&self) -> NaiveDateTime {
+    pub fn subscribed_at(&self) -> DateTime<Local> {
         self.subscribed_at
     }
 }
@@ -76,7 +75,7 @@ impl From<MakeSubscription> for Subscription {
             id,
             email: make_sub.email,
             name: make_sub.name,
-            subscribed_at: Utc::now().naive_utc(),
+            subscribed_at: Local::now(),
         }
     }
 }
