@@ -1,4 +1,6 @@
-use crate::{AppResponse, ResponseDetail};
+use crate::{
+    impl_error_from_extract_rejection, impl_error_from_server_error, AppResponse, ResponseDetail,
+};
 use axum::{
     extract::rejection,
     http::StatusCode,
@@ -33,38 +35,22 @@ impl std::fmt::Display for AppError {
     }
 }
 
-// 使用 ？ 将其他错误自动转换为自定义错误，当返回值为 AppResult 时 //
+/* 将
+ * std::io::Error,
+ * sqlx::Error
+ * 转换为 AppError (HTTP 的 INTERNAL_SERVER_ERROR)
+ * */
+impl_error_from_server_error!(std::io::Error, sqlx::Error,);
 
-/// IO 错误转换为自定义错误
-impl From<std::io::Error> for AppError {
-    fn from(error: std::io::Error) -> Self {
-        Self {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: error.to_string(),
-        }
-    }
-}
+// axum 的 rejection 转换为 AppError
+impl_error_from_extract_rejection!(
+    rejection::FormRejection,
+    rejection::JsonRejection,
+    rejection::PathRejection,
+    rejection::QueryRejection,
+);
 
-/// SQL 错误转换为自定义错误
-impl From<sqlx::Error> for AppError {
-    fn from(error: sqlx::Error) -> Self {
-        Self {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: error.to_string(),
-        }
-    }
-}
-
-/// FormRejection 错误转换为自定义错误
-impl From<rejection::FormRejection> for AppError {
-    fn from(error: rejection::FormRejection) -> Self {
-        Self {
-            status_code: error.status(),
-            message: error.to_string(),
-        }
-    }
-}
-
+/// AppError 转换为 AppResponse
 impl From<AppError> for AppResponse {
     fn from(error: AppError) -> Self {
         let status_code = error.status_code;
