@@ -12,13 +12,13 @@ use tower_http::{
 
 pub type StateRouter = Router<MySqlPool>;
 
-mod subscription;
+mod sub_api;
 
 pub fn compose() -> StateRouter {
     Router::new()
         .route("/", get(general::index))
         .route("/health", get(general::health))
-        .merge(subscription::route())
+        .merge(sub_api::route())
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())

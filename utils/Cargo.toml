@@ -6,4 +6,3 @@ version.workspace = true
 
 [dependencies]
 thiserror = { workspace = true }
-axum = { workspace = true }

@@ -36,7 +36,7 @@ where
 }
 
 pub type AppResponse<T = (), M = ()> = (StatusCode, ResponseDetail<T, M>);
-pub type SuccessResponse<T> = ResponseDetail<T, ()>;
+pub type SuccessResponse<T = ()> = ResponseDetail<T, ()>;
 pub type ErrorResponse = ResponseDetail<(), ()>;
 
 impl<T, M: Meta> Default for ResponseDetail<T, M> {
@@ -61,6 +61,20 @@ impl<T, M: Meta> ResponseDetail<T, M> {
             data: Some(data),
             metadata: Some(metadata),
             ..Self::default()
+        }
+    }
+}
+
+impl SuccessResponse {
+    pub fn new(status_code: StatusCode) -> Self {
+        Self {
+            status: true,
+            status_code: status_code.as_u16(),
+            status_message: status_code.canonical_reason().unwrap().to_owned(),
+            local_time: Local::now(),
+            data: None,
+            error_message: None,
+            metadata: None,
         }
     }
 }

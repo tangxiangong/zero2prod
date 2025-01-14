@@ -1,1 +1,1 @@
-pub mod subscription;
+pub mod sub_dto;

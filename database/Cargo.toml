@@ -9,3 +9,4 @@ sqlx = { workspace = true }
 chrono = { workspace = true }
 common = { path = "../common" }
 serde = { workspace = true }
+utils = { path = "../utils" }

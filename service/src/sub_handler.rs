@@ -4,10 +4,10 @@ use axum::{
     Form,
 };
 use common::{
-    dto::subscription::{MakeSubscription, Subscription, SubscriptionMeta},
+    sub_dto::{GetSubscription, MakeSubscription, SubscriptionMeta},
     AppResponseResult, ResponseDetail, SuccessResponse,
 };
-use database::crud::subscription as db;
+use database::sub_crud as crud;
 use sqlx::MySqlPool;
 
 /// POST "/subscription"
@@ -16,20 +16,19 @@ use sqlx::MySqlPool;
 pub async fn insert(
     State(pool): State<MySqlPool>,
     payload: Result<Form<MakeSubscription>, FormRejection>,
-) -> AppResponseResult<Subscription> {
+) -> AppResponseResult {
     let make_sub = payload?.0;
-    let sub = Subscription::new(make_sub.name(), make_sub.email())?;
-    db::create(&pool, &sub).await?;
+    crud::create(&pool, &make_sub).await?;
     Ok((
         StatusCode::CREATED,
-        SuccessResponse::with_data(StatusCode::CREATED, sub),
+        SuccessResponse::new(StatusCode::CREATED),
     ))
 }
 
 pub async fn list(
     State(pool): State<MySqlPool>,
-) -> AppResponseResult<Vec<Subscription>, SubscriptionMeta> {
-    let (meta, subs) = db::list(&pool).await?;
+) -> AppResponseResult<Vec<GetSubscription>, SubscriptionMeta> {
+    let (meta, subs) = crud::list(&pool).await?;
     Ok((
         StatusCode::OK,
         ResponseDetail::with_meta(StatusCode::OK, subs, meta),

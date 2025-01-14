@@ -4,6 +4,7 @@ mod error;
 pub use error::{AppError, AppResponseResult, AppResult};
 mod meta;
 pub use meta::Meta;
-pub mod dto;
-
 mod macros;
+
+mod dto;
+pub use dto::sub_dto;
