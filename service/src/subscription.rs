@@ -10,15 +10,15 @@ use common::{
 use database::crud::subscription as db;
 use sqlx::MySqlPool;
 
-/// make a new subscription
 /// POST /subscription
 /// Parse the x-www-form-urlencoded body into a `MakeSubscription` struct
-pub async fn make(
+/// and insert data into the database.
+pub async fn insert(
     State(pool): State<MySqlPool>,
     payload: Result<Form<MakeSubscription>, FormRejection>,
 ) -> AppResult<AppResponse<Subscription>> {
     let make_sub = payload?.0;
-    let sub = Subscription::from(make_sub);
+    let sub = Subscription::new(make_sub.name(), make_sub.email())?;
     db::create(&pool, &sub).await?;
     Ok((
         StatusCode::CREATED,

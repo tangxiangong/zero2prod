@@ -8,10 +8,10 @@ use sqlx::{query, query_as, MySqlPool};
 pub async fn create(pool: &MySqlPool, sub: &Subscription) -> AppResult<()> {
     query!(
         "INSERT INTO subscription (id, email, name, subscribed_at) VALUES (?, ?, ?, ?)",
-        sub.id(),
-        sub.email(),
-        sub.name(),
-        sub.subscribed_at()
+        sub.id,
+        sub.email,
+        sub.name,
+        sub.subscribed_at,
     )
     .execute(pool)
     .await?;

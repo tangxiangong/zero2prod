@@ -40,7 +40,7 @@ impl std::fmt::Display for AppError {
  * sqlx::Error
  * 转换为 AppError (HTTP 的 INTERNAL_SERVER_ERROR)
  * */
-impl_error_from_server_error!(std::io::Error, sqlx::Error,);
+impl_error_from_server_error!(std::io::Error, sqlx::Error, utils::SnowflakeError);
 
 // axum 的 rejection 转换为 AppError
 impl_error_from_extract_rejection!(

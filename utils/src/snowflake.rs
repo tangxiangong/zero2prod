@@ -1,59 +1,98 @@
-use std::sync::Mutex;
-use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use crate::error::SnowflakeError;
+use std::{
+    sync::Mutex,
+    thread,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
-// 北京时间 2024-01-01 00:00:00
-static START: i64 = 1735660800;
+// 常量定义
+const START_TIMESTAMP: i64 = 1735660800;
+const SEQUENCE_BITS: i32 = 12;
+const WORKER_ID_BITS: i32 = 10;
+const MAX_WORKER_ID: i32 = -1 ^ (-1 << WORKER_ID_BITS);
+const MAX_SEQUENCE: u16 = (-1 ^ (-1 << SEQUENCE_BITS)) as u16;
 
+/// 雪花算法ID生成器
+///
+/// - 41位时间戳
+/// - 10位工作机器ID
+/// - 12位序列号
+#[derive(Debug)]
 pub struct Generator {
     worker_id: i32,
-    sequence: Mutex<u16>,
-    last_timestamp: Mutex<i64>,
+    inner: Mutex<GeneratorInner>,
+}
+
+#[derive(Debug)]
+struct GeneratorInner {
+    sequence: u16,
+    last_timestamp: i64,
 }
 
 impl Default for Generator {
     fn default() -> Self {
         Self {
-            worker_id: 1,
-            sequence: Mutex::new(0),
-            last_timestamp: Mutex::new(0),
+            worker_id: 0,
+            inner: Mutex::new(GeneratorInner {
+                sequence: 0,
+                last_timestamp: 0,
+            }),
         }
     }
 }
 
 impl Generator {
-    pub fn new(worker_id: i32) -> Self {
-        Generator {
-            sequence: Mutex::new(0),
-            last_timestamp: Mutex::new(0),
-            worker_id,
+    pub fn new(worker_id: i32) -> Result<Self, SnowflakeError> {
+        if !(0..MAX_WORKER_ID).contains(&worker_id) {
+            return Err(SnowflakeError::InvalidWorkerId(worker_id));
         }
+
+        Ok(Self {
+            worker_id,
+            inner: Mutex::new(GeneratorInner {
+                sequence: 0,
+                last_timestamp: 0,
+            }),
+        })
     }
 
-    pub fn next_id(&self) -> u64 {
-        let mut sequence = self.sequence.lock().unwrap();
-        let mut last_ts = self.last_timestamp.lock().unwrap();
-
-        let timestamp = SystemTime::now()
+    fn get_current_timestamp() -> Result<i64, SnowflakeError> {
+        SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+            .map(|d| d.as_millis() as i64)
+            .map_err(|_| SnowflakeError::SystemTimeError)
+    }
 
-        if timestamp == *last_ts {
-            *sequence = (*sequence + 1) & 0xfff;
-            if *sequence == 0 {
-                // sequence exhausted, wait for next millisecond
-                thread::sleep(Duration::from_millis(1));
-            }
-        } else {
-            *sequence = 0;
+    pub fn next_id(&self) -> Result<u64, SnowflakeError> {
+        let mut inner = self.inner.lock().unwrap();
+        let current = Self::get_current_timestamp()?;
+        let timestamp = current - START_TIMESTAMP;
+
+        if timestamp < inner.last_timestamp {
+            return Err(SnowflakeError::ClockMovedBackwards(
+                inner.last_timestamp - timestamp,
+            ));
         }
 
-        *last_ts = timestamp;
+        if timestamp == inner.last_timestamp {
+            inner.sequence = (inner.sequence + 1) & MAX_SEQUENCE;
+            if inner.sequence == 0 {
+                // 序列号用尽，等待下一毫秒
+                thread::sleep(Duration::from_millis(1));
+                let new_timestamp = Self::get_current_timestamp()? - START_TIMESTAMP;
+                if new_timestamp <= timestamp {
+                    return Err(SnowflakeError::SystemTimeError);
+                }
+                inner.last_timestamp = new_timestamp;
+            }
+        } else {
+            inner.sequence = 0;
+            inner.last_timestamp = timestamp;
+        }
 
-        ((((timestamp - START) & 0x1FFFFFFFFFF) << 22)
-            | ((self.worker_id as i64 & 0x3FF) << 12)
-            | (*sequence & 0xFFF) as i64) as u64
+        Ok((((timestamp & 0x1FFFFFFFFFF) << 22)
+            | ((self.worker_id & 0x3FF) << 12) as i64
+            | (inner.sequence as i64)) as u64)
     }
 }
 
@@ -64,26 +103,45 @@ mod tests {
     use std::sync::Arc;
 
     #[test]
-    fn test_concurrent_unique_ids() {
-        let generator = Arc::new(Generator::new(1));
+    fn test_invalid_worker_id() {
+        assert!(Generator::new(-1).is_err());
+        assert!(Generator::new(1024).is_err());
+        assert!(Generator::new(0).is_ok());
+    }
+
+    #[test]
+    fn test_unique_ids() -> Result<(), SnowflakeError> {
+        let generator = Generator::new(1)?;
+        let mut ids = HashSet::new();
+        for _ in 0..1000 {
+            ids.insert(generator.next_id()?);
+        }
+        assert_eq!(ids.len(), 1000);
+        Ok(())
+    }
+
+    #[test]
+    fn test_concurrent_generation() -> Result<(), SnowflakeError> {
+        let generator = Arc::new(Generator::new(1)?);
         let mut handles = vec![];
-        let total_ids = 1000;
 
         for _ in 0..10 {
             let gen = Arc::clone(&generator);
             handles.push(thread::spawn(move || {
-                (0..total_ids / 10)
-                    .map(|_| gen.next_id())
-                    .collect::<Vec<_>>()
+                let mut ids = Vec::with_capacity(1000);
+                for _ in 0..1000 {
+                    ids.push(gen.next_id().unwrap());
+                }
+                ids
             }));
         }
 
         let mut all_ids = HashSet::new();
         for handle in handles {
-            let ids = handle.join().unwrap();
-            all_ids.extend(ids);
+            all_ids.extend(handle.join().unwrap());
         }
 
-        assert_eq!(all_ids.len(), total_ids);
+        assert_eq!(all_ids.len(), 10000);
+        Ok(())
     }
 }

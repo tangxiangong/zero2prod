@@ -38,8 +38,9 @@ sqlx = { version = "0.8", features = [
     "json",
     "tls-rustls-ring-native-roots",
 ] }
-uuid = { version = "1", features = ["v4", "fast-rng"] }
-config = { version = "0.14", features = ["yaml"] }
+uuid = { version = "1.12", features = ["v4", "fast-rng"] }
+config = { version = "0.15.5", features = ["yaml"] }
+thiserror = "2"
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3

@@ -1,8 +1,9 @@
-use crate::meta::Meta;
+use crate::{AppResult, Meta};
 use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use sqlx::FromRow;
-use uuid::Uuid;
+use utils::snowflake::Generator;
 
 #[derive(Debug, Serialize, FromRow)]
 pub struct Subscription {
@@ -10,6 +11,19 @@ pub struct Subscription {
     pub email: String,
     pub name: String,
     pub subscribed_at: DateTime<Local>,
+}
+
+impl Subscription {
+    pub fn new(name: String, email: String) -> AppResult<Self> {
+        let id = Generator::default().next_id()?;
+        let subscribed_at = Local::now();
+        Ok(Self {
+            id,
+            email,
+            name,
+            subscribed_at,
+        })
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -25,24 +39,6 @@ impl SubscriptionMeta {
 
 impl Meta for SubscriptionMeta {
     type Item = Subscription;
-}
-
-impl Subscription {
-    pub fn id(&self) -> u64 {
-        self.id
-    }
-
-    pub fn email(&self) -> String {
-        self.email.clone()
-    }
-
-    pub fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn subscribed_at(&self) -> DateTime<Local> {
-        self.subscribed_at
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,17 +61,5 @@ impl MakeSubscription {
 
     pub fn name(&self) -> String {
         self.name.clone()
-    }
-}
-
-impl From<MakeSubscription> for Subscription {
-    fn from(make_sub: MakeSubscription) -> Self {
-        let id = Uuid::new_v4().as_u128() as u64;
-        Self {
-            id,
-            email: make_sub.email,
-            name: make_sub.name,
-            subscribed_at: Local::now(),
-        }
     }
 }

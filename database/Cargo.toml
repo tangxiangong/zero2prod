@@ -8,3 +8,4 @@ version.workspace = true
 sqlx = { workspace = true }
 chrono = { workspace = true }
 common = { path = "../common" }
+serde = { workspace = true }
