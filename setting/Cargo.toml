@@ -1,0 +1,11 @@
+[package]
+name = "setting"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+config = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true }

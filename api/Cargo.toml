@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+tokio = { workspace = true }
 axum = { workspace = true }
 service = { path = "../service" }
 sqlx = { workspace = true }

@@ -1,12 +1,9 @@
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-#[path = "config.rs"]
-mod config;
-
 #[tokio::main]
 async fn main() {
-    let (pool, listener) = config::config().await;
+    let (pool, listener) = setting::get().await;
 
     tracing_subscriber::fmt::init();
     let app = api::compose()

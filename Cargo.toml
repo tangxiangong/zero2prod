@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["api", "app", "common", "service", "middleware", "database", "utils"]
+members = ["api", "app", "common", "service", "middleware", "database", "utils", "setting"]
 
 
 [workspace.package]
@@ -30,6 +30,7 @@ sqlx = { version = "0.8", features = [
     "tls-rustls-ring-native-roots",
 ] }
 uuid = { version = "1", features = ["v4", "fast-rng"] }
+config = { version = "0.14", features = ["yaml"] }
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3
