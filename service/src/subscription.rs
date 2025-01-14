@@ -31,7 +31,7 @@ pub async fn list(
 ) -> AppResult<AppResponse<Vec<Subscription>, SubscriptionMeta>> {
     let (meta, subs) = db::list(&pool).await?;
     Ok((
-        StatusCode::FOUND,
-        ResponseDetail::with_meta(StatusCode::FOUND, subs, meta),
+        StatusCode::OK,
+        ResponseDetail::with_meta(StatusCode::OK, subs, meta),
     ))
 }
