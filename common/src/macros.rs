@@ -6,7 +6,7 @@ macro_rules! impl_error_from_extract_rejection {
                 fn from(error: $rejection) -> Self {
                     Self {
                         status_code: error.status(),
-                        message: error.to_string(),
+                        message: error.body_text(),
                     }
                 }
             }

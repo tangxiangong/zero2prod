@@ -5,7 +5,7 @@ use axum::{
 };
 use common::{
     dto::subscription::{MakeSubscription, Subscription, SubscriptionMeta},
-    AppResponse, AppResult, ResponseDetail,
+    AppResponse, AppResult, ResponseDetail, SuccessResponse,
 };
 use database::crud::subscription as db;
 use sqlx::MySqlPool;
@@ -22,7 +22,7 @@ pub async fn make(
     db::create(&pool, &sub).await?;
     Ok((
         StatusCode::CREATED,
-        ResponseDetail::success(StatusCode::CREATED, sub),
+        SuccessResponse::with_data(StatusCode::CREATED, sub),
     ))
 }
 

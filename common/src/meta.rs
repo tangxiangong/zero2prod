@@ -44,3 +44,7 @@ pub trait Meta: Serialize {
 impl Meta for () {
     type Item = ();
 }
+
+impl Meta for serde_json::Value {
+    type Item = serde_json::Value;
+}

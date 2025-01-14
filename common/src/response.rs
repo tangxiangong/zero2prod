@@ -36,8 +36,10 @@ where
 }
 
 pub type AppResponse<T = (), M = ()> = (StatusCode, ResponseDetail<T, M>);
+pub type SuccessResponse<T> = ResponseDetail<T, ()>;
+pub type ErrorResponse = ResponseDetail<(), ()>;
 
-impl<T: Serialize, M: Serialize + Meta> Default for ResponseDetail<T, M> {
+impl<T, M: Meta> Default for ResponseDetail<T, M> {
     fn default() -> Self {
         Self {
             status: true,
@@ -51,16 +53,7 @@ impl<T: Serialize, M: Serialize + Meta> Default for ResponseDetail<T, M> {
     }
 }
 
-impl<T: Serialize, M: Serialize + Meta> ResponseDetail<T, M> {
-    pub fn success(status_code: StatusCode, data: T) -> Self {
-        Self {
-            status_code: status_code.as_u16(),
-            status_message: status_code.as_str().to_owned(),
-            data: Some(data),
-            ..Self::default()
-        }
-    }
-
+impl<T, M: Meta> ResponseDetail<T, M> {
     pub fn with_meta(status_code: StatusCode, data: T, metadata: M) -> Self {
         Self {
             status_code: status_code.as_u16(),
@@ -70,14 +63,32 @@ impl<T: Serialize, M: Serialize + Meta> ResponseDetail<T, M> {
             ..Self::default()
         }
     }
+}
 
-    pub fn error(status_code: StatusCode, error_message: &str) -> Self {
+impl<T> SuccessResponse<T> {
+    pub fn with_data(status_code: StatusCode, data: T) -> Self {
+        Self {
+            status: true,
+            status_code: status_code.as_u16(),
+            status_message: status_code.canonical_reason().unwrap().to_owned(),
+            local_time: Local::now(),
+            data: Some(data),
+            error_message: None,
+            metadata: None,
+        }
+    }
+}
+
+impl ErrorResponse {
+    pub fn with_error(status_code: StatusCode, error_message: &str) -> Self {
         Self {
             status: false,
             status_code: status_code.as_u16(),
             status_message: status_code.canonical_reason().unwrap().to_owned(),
+            local_time: Local::now(),
+            data: None,
             error_message: Some(error_message.to_owned()),
-            ..Self::default()
+            metadata: None,
         }
     }
 }
@@ -95,5 +106,72 @@ impl From<StatusCode> for ResponseDetail {
 impl<T: Serialize, M: Serialize + Meta> IntoResponse for ResponseDetail<T, M> {
     fn into_response(self) -> Response {
         Json(json!(self)).into_response()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::StatusCode;
+    use serde_json::Value;
+
+    #[test]
+    fn test_response_detail_default() {
+        let response = ResponseDetail::<Value, Value>::default();
+        assert!(response.status);
+        assert_eq!(response.status_code, StatusCode::OK.as_u16());
+        assert_eq!(
+            response.status_message,
+            StatusCode::OK.canonical_reason().unwrap()
+        );
+        assert!(response.error_message.is_none());
+        assert!(response.data.is_none());
+        assert!(response.metadata.is_none());
+    }
+
+    #[test]
+    fn test_response_detail_success() {
+        let response = ResponseDetail::with_data(StatusCode::CREATED, json!({ "id": 1 }));
+        assert!(response.status);
+        assert_eq!(response.status_code, StatusCode::CREATED.as_u16());
+        assert_eq!(
+            response.status_message,
+            StatusCode::CREATED.canonical_reason().unwrap()
+        );
+        assert!(response.error_message.is_none());
+        assert_eq!(response.data.unwrap(), json!({ "id": 1 }));
+        assert!(response.metadata.is_none());
+    }
+
+    #[test]
+    fn test_response_detail_with_meta() {
+        let response = ResponseDetail::with_meta(
+            StatusCode::CREATED,
+            json!({ "id": 1 }),
+            json!({ "total": 1 }),
+        );
+        assert!(response.status);
+        assert_eq!(response.status_code, StatusCode::CREATED.as_u16());
+        assert_eq!(
+            response.status_message,
+            StatusCode::CREATED.canonical_reason().unwrap()
+        );
+        assert!(response.error_message.is_none());
+        assert_eq!(response.data.unwrap(), json!({ "id": 1 }));
+        assert_eq!(response.metadata.unwrap(), json!({ "total": 1 }));
+    }
+
+    #[test]
+    fn test_response_detail_error() {
+        let response = ResponseDetail::with_error(StatusCode::BAD_REQUEST, "Bad Request");
+        assert!(!response.status);
+        assert_eq!(response.status_code, StatusCode::BAD_REQUEST.as_u16());
+        assert_eq!(
+            response.status_message,
+            StatusCode::BAD_REQUEST.canonical_reason().unwrap()
+        );
+        assert_eq!(response.error_message.unwrap(), "Bad Request");
+        assert!(response.data.is_none());
+        assert!(response.metadata.is_none());
     }
 }
