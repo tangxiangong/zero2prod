@@ -5,7 +5,7 @@ use common::{
 use sqlx::{query, query_as, MySqlPool};
 
 /// 增
-pub async fn create(pool: &MySqlPool, sub: &Subscription) -> AppResult<()> {
+pub async fn create(pool: &MySqlPool, sub: &Subscription) -> AppResult {
     query!(
         "INSERT INTO subscription (id, email, name, subscribed_at) VALUES (?, ?, ?, ?)",
         sub.id,

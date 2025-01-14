@@ -71,7 +71,8 @@ impl IntoResponse for AppError {
 }
 
 /// 自定义结果类型
-pub type AppResult<T> = Result<T, AppError>;
+pub type AppResult<T = ()> = Result<T, AppError>;
+pub type AppResponseResult<T = (), M = ()> = AppResult<AppResponse<T, M>>;
 
 #[cfg(test)]
 mod tests {
