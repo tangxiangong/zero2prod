@@ -1,4 +1,3 @@
-use crate::meta::Meta;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -18,10 +17,7 @@ use serde_json::json;
 /// - `data:Option<T>` **响应数据**
 /// - `metadata:Option<M>` **响应数据对应的元数据**
 #[derive(Serialize)]
-pub struct ResponseDetail<T = (), M = ()>
-where
-    M: Meta,
-{
+pub struct ResponseDetail<T = (), M = ()> {
     #[serde(rename = "success")]
     status: bool,
     status_code: u16,
@@ -39,7 +35,7 @@ pub type AppResponse<T = (), M = ()> = (StatusCode, ResponseDetail<T, M>);
 pub type SuccessResponse<T = ()> = ResponseDetail<T, ()>;
 pub type ErrorResponse = ResponseDetail<(), ()>;
 
-impl<T, M: Meta> Default for ResponseDetail<T, M> {
+impl<T, M> Default for ResponseDetail<T, M> {
     fn default() -> Self {
         Self {
             status: true,
@@ -53,7 +49,7 @@ impl<T, M: Meta> Default for ResponseDetail<T, M> {
     }
 }
 
-impl<T, M: Meta> ResponseDetail<T, M> {
+impl<T, M> ResponseDetail<T, M> {
     pub fn with_meta(status_code: StatusCode, data: T, metadata: M) -> Self {
         Self {
             status_code: status_code.as_u16(),
@@ -117,7 +113,7 @@ impl From<StatusCode> for ResponseDetail {
     }
 }
 
-impl<T: Serialize, M: Serialize + Meta> IntoResponse for ResponseDetail<T, M> {
+impl<T: Serialize, M: Serialize> IntoResponse for ResponseDetail<T, M> {
     fn into_response(self) -> Response {
         Json(json!(self)).into_response()
     }

@@ -1,13 +1,13 @@
 use chrono::Local;
 use common::{
-    sub_dto::{GetSubscription, MakeSubscription, PaginationMeta, PaginationQuery},
+    model::subscription::{Pagination, PaginationMeta, SubscriptionRequest, SubscriptionResponse},
     AppError, AppResult,
 };
 use sqlx::{query, query_as, MySqlPool};
 use utils::snowflake::Generator;
 
 /// 增
-pub async fn create(pool: &MySqlPool, sub: &MakeSubscription) -> AppResult {
+pub async fn create(pool: &MySqlPool, sub: &SubscriptionRequest) -> AppResult {
     let id = Generator::default().next_id()?;
     let subscribed_at = Local::now();
     let res = query!(
@@ -42,8 +42,8 @@ pub async fn create(pool: &MySqlPool, sub: &MakeSubscription) -> AppResult {
 /// 查
 pub async fn pagination_list(
     pool: &MySqlPool,
-    pagination: PaginationQuery,
-) -> AppResult<(PaginationMeta, Vec<GetSubscription>)> {
+    pagination: Pagination,
+) -> AppResult<(PaginationMeta, Vec<SubscriptionResponse>)> {
     let page = pagination.page() as i64;
     let limit = pagination.per_page() as i64;
     let total = query!("SELECT COUNT(*) as count FROM subscription")
@@ -56,7 +56,7 @@ pub async fn pagination_list(
     }
     let off_set = (page - 1) * limit;
     let data = query_as!(
-        GetSubscription,
+        SubscriptionResponse,
         "SELECT name, email FROM subscription LIMIT ? OFFSET ?",
         limit,
         off_set

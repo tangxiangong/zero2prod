@@ -1,23 +1,18 @@
-use crate::{AppError, Meta};
+use crate::AppError;
 use axum::{
     extract::{Form, FromRequest, Request},
     http::StatusCode,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use utils::validator::{is_valid_email, is_valid_name};
 
-#[derive(Debug, Serialize)]
-pub struct SubscriptionMeta {
-    count: usize,
-}
-
 #[derive(Debug, Deserialize)]
-pub struct PaginationQuery {
+pub struct Pagination {
     page: i32,
     per_page: i32,
 }
 
-impl Default for PaginationQuery {
+impl Default for Pagination {
     fn default() -> Self {
         Self {
             page: 1,
@@ -26,7 +21,7 @@ impl Default for PaginationQuery {
     }
 }
 
-impl PaginationQuery {
+impl Pagination {
     pub fn page(&self) -> i32 {
         self.page
     }
@@ -36,53 +31,13 @@ impl PaginationQuery {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct PaginationMeta {
-    total_page: usize,
-    limit: usize,
-    current_page: usize,
-    current_page_size: usize,
-}
-
-impl Meta for PaginationMeta {}
-
-impl PaginationMeta {
-    pub fn new(
-        total_page: usize,
-        limit: usize,
-        current_page: usize,
-        current_page_size: usize,
-    ) -> Self {
-        Self {
-            total_page,
-            limit,
-            current_page,
-            current_page_size,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, sqlx::FromRow)]
-pub struct GetSubscription {
-    pub name: String,
-    pub email: String,
-}
-
-impl SubscriptionMeta {
-    pub fn new(count: usize) -> Self {
-        Self { count }
-    }
-}
-
-impl Meta for SubscriptionMeta {}
-
 #[derive(Debug, Deserialize)]
-pub struct MakeSubscription {
+pub struct SubscriptionRequest {
     name: String,
     email: String,
 }
 
-impl MakeSubscription {
+impl SubscriptionRequest {
     pub fn email(&self) -> String {
         self.email.clone()
     }
@@ -93,14 +48,16 @@ impl MakeSubscription {
 }
 
 // 让 MakeSubscription 可以当作一个提取器
-impl<S> FromRequest<S> for MakeSubscription
+impl<S> FromRequest<S> for SubscriptionRequest
 where
     S: Send + Sync,
 {
     type Rejection = AppError;
 
     async fn from_request(req: Request, _state: &S) -> Result<Self, Self::Rejection> {
-        let sub = Form::<MakeSubscription>::from_request(req, _state).await?.0;
+        let sub = Form::<SubscriptionRequest>::from_request(req, _state)
+            .await?
+            .0;
         if !is_valid_name(&sub.name) {
             return Err(AppError::new(StatusCode::BAD_REQUEST, "名字中包含非法字符"));
         }

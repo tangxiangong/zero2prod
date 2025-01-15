@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
 };
 use common::{
-    sub_dto::{GetSubscription, MakeSubscription, PaginationMeta, PaginationQuery},
+    model::subscription::{Pagination, PaginationMeta, SubscriptionRequest, SubscriptionResponse},
     AppResponseResult, ResponseDetail, SuccessResponse,
 };
 use database::sub_crud as crud;
@@ -14,7 +14,7 @@ use sqlx::MySqlPool;
 /// and insert it into the database.
 pub async fn make_sub(
     State(pool): State<MySqlPool>,
-    new_sub: MakeSubscription,
+    new_sub: SubscriptionRequest,
 ) -> AppResponseResult {
     crud::create(&pool, &new_sub).await?;
     Ok((
@@ -25,8 +25,8 @@ pub async fn make_sub(
 
 pub async fn pagination_list(
     State(pool): State<MySqlPool>,
-    payload: Result<Query<PaginationQuery>, QueryRejection>,
-) -> AppResponseResult<Vec<GetSubscription>, PaginationMeta> {
+    payload: Result<Query<Pagination>, QueryRejection>,
+) -> AppResponseResult<Vec<SubscriptionResponse>, PaginationMeta> {
     let pagination = payload?.0;
     let (meta, data) = crud::pagination_list(&pool, pagination).await?;
 
