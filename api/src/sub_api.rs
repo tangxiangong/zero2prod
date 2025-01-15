@@ -7,6 +7,6 @@ use service::sub_handler as handler;
 
 pub fn route() -> StateRouter {
     Router::new()
-        .route("/subscription", get(handler::list))
-        .route("/subscription", post(handler::insert))
+        .route("/subscription", get(handler::pagination_list))
+        .route("/subscription", post(handler::make_sub))
 }

@@ -1,7 +1,7 @@
 use chrono::Local;
 use common::{
-    sub_dto::{GetSubscription, MakeSubscription, SubscriptionMeta},
-    AppResult,
+    sub_dto::{GetSubscription, MakeSubscription, PaginationMeta, PaginationQuery},
+    AppError, AppResult,
 };
 use sqlx::{query, query_as, MySqlPool};
 use utils::snowflake::Generator;
@@ -10,7 +10,7 @@ use utils::snowflake::Generator;
 pub async fn create(pool: &MySqlPool, sub: &MakeSubscription) -> AppResult {
     let id = Generator::default().next_id()?;
     let subscribed_at = Local::now();
-    query!(
+    let res = query!(
         "INSERT INTO subscription (id, email, name, subscribed_at) VALUES (?, ?, ?, ?)",
         id,
         sub.email(),
@@ -18,15 +18,56 @@ pub async fn create(pool: &MySqlPool, sub: &MakeSubscription) -> AppResult {
         subscribed_at,
     )
     .execute(pool)
-    .await?;
-    Ok(())
+    .await;
+
+    match res {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            let db_error = e.as_database_error();
+            match db_error {
+                Some(db_e) => {
+                    if db_e.is_unique_violation() {
+                        Err(AppError::confict("邮件已订阅"))
+                    } else {
+                        Err(AppError::from(e))
+                    }
+                }
+                None => Err(AppError::from(e)),
+            }
+        }
+    }
 }
 
+// TODO 使用 Redis 缓存查询结果，减少数据库查询次数
 /// 查
-pub async fn list(pool: &MySqlPool) -> AppResult<(SubscriptionMeta, Vec<GetSubscription>)> {
-    let subscriptions = query_as!(GetSubscription, "SELECT name, email  FROM subscription")
-        .fetch_all(pool)
-        .await?;
-    let meta = SubscriptionMeta::new(subscriptions.len());
-    Ok((meta, subscriptions))
+pub async fn pagination_list(
+    pool: &MySqlPool,
+    pagination: PaginationQuery,
+) -> AppResult<(PaginationMeta, Vec<GetSubscription>)> {
+    let page = pagination.page() as i64;
+    let limit = pagination.per_page() as i64;
+    let total = query!("SELECT COUNT(*) as count FROM subscription")
+        .fetch_one(pool)
+        .await?
+        .count;
+    let total_page = total / limit + 1;
+    if page > total_page {
+        return Err(AppError::not_found("Page not found"));
+    }
+    let off_set = (page - 1) * limit;
+    let data = query_as!(
+        GetSubscription,
+        "SELECT name, email FROM subscription LIMIT ? OFFSET ?",
+        limit,
+        off_set
+    )
+    .fetch_all(pool)
+    .await?;
+    let meta = PaginationMeta::new(
+        total_page as usize,
+        limit as usize,
+        page as usize,
+        data.len(),
+    );
+    Ok((meta, data))
 }

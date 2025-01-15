@@ -31,7 +31,7 @@ WORKDIR /webserver
 COPY --from=builder /usr/src/webserver/target/release/app /webserver/
 
 # 从构建阶段复制配置文件
-COPY --from=builder /usr/src/webserver/.env /webserver/
+COPY --from=builder /usr/src/webserver/configration.yml /webserver/
 
 # 暴露应用端口
 EXPOSE 3000

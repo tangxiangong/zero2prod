@@ -1,10 +1,9 @@
 use axum::{
-    extract::{rejection::FormRejection, State},
+    extract::{rejection::QueryRejection, Query, State},
     http::StatusCode,
-    Form,
 };
 use common::{
-    sub_dto::{GetSubscription, MakeSubscription, SubscriptionMeta},
+    sub_dto::{GetSubscription, MakeSubscription, PaginationMeta, PaginationQuery},
     AppResponseResult, ResponseDetail, SuccessResponse,
 };
 use database::sub_crud as crud;
@@ -13,24 +12,26 @@ use sqlx::MySqlPool;
 /// POST "/subscription"
 /// Parse the `x-www-form-urlencoded` body data into type `MakeSubscription`
 /// and insert it into the database.
-pub async fn insert(
+pub async fn make_sub(
     State(pool): State<MySqlPool>,
-    payload: Result<Form<MakeSubscription>, FormRejection>,
+    new_sub: MakeSubscription,
 ) -> AppResponseResult {
-    let make_sub = payload?.0;
-    crud::create(&pool, &make_sub).await?;
+    crud::create(&pool, &new_sub).await?;
     Ok((
         StatusCode::CREATED,
         SuccessResponse::new(StatusCode::CREATED),
     ))
 }
 
-pub async fn list(
+pub async fn pagination_list(
     State(pool): State<MySqlPool>,
-) -> AppResponseResult<Vec<GetSubscription>, SubscriptionMeta> {
-    let (meta, subs) = crud::list(&pool).await?;
+    payload: Result<Query<PaginationQuery>, QueryRejection>,
+) -> AppResponseResult<Vec<GetSubscription>, PaginationMeta> {
+    let pagination = payload?.0;
+    let (meta, data) = crud::pagination_list(&pool, pagination).await?;
+
     Ok((
         StatusCode::OK,
-        ResponseDetail::with_meta(StatusCode::OK, subs, meta),
+        ResponseDetail::with_meta(StatusCode::OK, data, meta),
     ))
 }

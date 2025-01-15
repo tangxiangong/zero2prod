@@ -1,0 +1,10 @@
+target/
+.env
+README.md
+.gitignore
+.git/
+Cargo.lock
+Cargo.toml
+Dockerfile
+compose.yml
+migrations/
