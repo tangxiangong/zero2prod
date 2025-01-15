@@ -1,6 +1,0 @@
-[package]
-name = "middleware"
-edition.workspace = true
-version.workspace = true
-
-[dependencies]

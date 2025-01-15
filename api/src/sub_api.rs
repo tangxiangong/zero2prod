@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use service::sub_handler as handler;
+use service::handler::sub_handler as handler;
 
 pub fn route() -> StateRouter {
     Router::new()

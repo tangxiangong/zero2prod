@@ -1,6 +1,6 @@
 use axum::http::Method;
 use axum::{routing::get, Router};
-use service::general;
+use service::handler::general;
 use sqlx::MySqlPool;
 use std::time::Duration;
 use tower::ServiceBuilder;
