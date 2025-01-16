@@ -55,7 +55,6 @@ impl std::fmt::Display for AppError {
  * */
 impl_error_from_server_error!(
     std::io::Error,
-    sqlx::Error,
     utils::SnowflakeError,
     sea_orm::error::DbErr,
     sea_orm::error::SqlErr,
@@ -111,15 +110,6 @@ mod tests {
         let io_error = io::Error::new(io::ErrorKind::NotFound, "Not Found");
         let error_message = io_error.to_string();
         let app_error: AppError = io_error.into();
-        assert_eq!(app_error.status_code, StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(app_error.message, error_message);
-    }
-
-    #[test]
-    fn test_app_error_from_sqlx_error() {
-        let sqlx_error = sqlx::Error::Io(io::Error::new(io::ErrorKind::NotFound, "Not Found"));
-        let error_message = sqlx_error.to_string();
-        let app_error: AppError = sqlx_error.into();
         assert_eq!(app_error.status_code, StatusCode::INTERNAL_SERVER_ERROR);
         assert_eq!(app_error.message, error_message);
     }
