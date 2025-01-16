@@ -1,7 +1,7 @@
 use axum::http::Method;
 use axum::{routing::get, Router};
+use sea_orm::DbConn;
 use service::handler::general;
-use sqlx::MySqlPool;
 use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::{
@@ -10,7 +10,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-pub type StateRouter = Router<MySqlPool>;
+pub type StateRouter = Router<DbConn>;
 
 mod sub_api;
 

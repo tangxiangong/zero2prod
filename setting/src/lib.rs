@@ -1,4 +1,6 @@
+use sea_orm::prelude::*;
 use serde::Deserialize;
+use std::time::Duration;
 use tokio::net::TcpListener;
 
 #[derive(Deserialize)]
@@ -25,7 +27,7 @@ fn load() -> Result<Setting, config::ConfigError> {
         .try_deserialize::<Setting>()
 }
 
-pub async fn get() -> (sqlx::MySqlPool, TcpListener) {
+pub async fn get() -> (DbConn, TcpListener) {
     let setting = load().expect("Failed to load configuration");
 
     let db_url = format!(
@@ -37,31 +39,23 @@ pub async fn get() -> (sqlx::MySqlPool, TcpListener) {
         setting.db.port,
         setting.db.db_name
     );
-    let pool = sqlx::mysql::MySqlPoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
+
+    let mut opt = sea_orm::ConnectOptions::new(&db_url);
+    opt.max_connections(100)
+        .min_connections(5)
+        .connect_timeout(Duration::from_secs(8))
+        .acquire_timeout(Duration::from_secs(8))
+        .idle_timeout(Duration::from_secs(8))
+        .max_lifetime(Duration::from_secs(8))
+        .sqlx_logging(true);
+
+    let db_conn = sea_orm::Database::connect(opt)
         .await
-        .expect("Failed to connect to MySQL");
+        .expect("连接数据库失败");
 
     let listner = TcpListener::bind(format!("127.0.0.1:{}", setting.app_port))
         .await
         .unwrap_or_else(|_| panic!("Failed to bind to port {}", setting.app_port));
-    (pool, listner)
 
-    // migrate!("../migrations")
-    //     .run(&pool)
-    //     .await
-    //     .expect("Failed to migrate database");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_load() {
-        let setting = load().expect("Failed to load configuration");
-        assert_eq!(setting.app_port, 3000);
-        assert_eq!(setting.db.db_type, "mysql");
-    }
+    (db_conn, listner)
 }

@@ -8,6 +8,7 @@ members = [
     "database",
     "utils",
     "setting",
+    "migration",
 ]
 
 
@@ -27,19 +28,14 @@ dotenvy = "0.15.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4.39", features = ["serde"] }
-sqlx = { version = "0.8", features = [
-    "runtime-tokio",
-    "macros",
-    "derive",
-    "mysql",
-    "chrono",
-    "migrate",
-    "json",
-    "tls-rustls-ring-native-roots",
-] }
 config = { version = "0.15.5", features = ["yaml"] }
 thiserror = "2"
 regex = "1.11"
-
-[profile.dev.package.sqlx-macros]
-opt-level = 3
+sea-orm = { version = "1", features = [
+    "sqlx-mysql",
+    "runtime-tokio-rustls",
+    "macros",
+    "with-chrono",
+    "with-json",
+    "debug-print",
+] }

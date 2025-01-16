@@ -7,4 +7,4 @@ version.workspace = true
 axum = { workspace = true }
 database = { path = "../database" }
 common = { path = "../common" }
-sqlx = { workspace = true }
+sea-orm = { workspace = true }

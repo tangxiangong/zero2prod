@@ -4,11 +4,12 @@ use tracing::info;
 async fn main() {
     dotenvy::dotenv().ok();
 
-    let (pool, listener) = setting::get().await;
+    // let (pool, listener) = setting::get().await;
+    let (db_conn, listener) = setting::get().await;
 
     tracing_subscriber::fmt::init();
 
-    let app = api::compose().with_state(pool);
+    let app = api::compose().with_state(db_conn);
     info!(
         "server listener on http://{}",
         listener.local_addr().unwrap()

@@ -7,5 +7,5 @@ version.workspace = true
 [dependencies]
 serde = { workspace = true }
 config = { workspace = true }
-sqlx = { workspace = true }
 tokio = { workspace = true }
+sea-orm = { workspace = true }

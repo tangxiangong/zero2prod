@@ -1,3 +1,4 @@
+use sea_orm::{DerivePartialModel, FromQueryResult};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -29,7 +30,8 @@ impl PaginationMeta {
     }
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, DerivePartialModel, FromQueryResult)]
+#[sea_orm(entity = "crate::model::entity::Subscription")]
 pub struct SubscriptionResponse {
     pub name: String,
     pub email: String,
