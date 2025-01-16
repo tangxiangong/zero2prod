@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
 };
 use common::{
-    model::subscription_dto::{
+    model::dto::subscription::{
         Pagination, PaginationMeta, SubscriptionRequest, SubscriptionResponse,
     },
     AppResponseResult, ResponseDetail, SuccessResponse,

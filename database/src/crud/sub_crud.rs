@@ -1,7 +1,9 @@
 use common::{
     model::{
+        dto::subscription::{
+            Pagination, PaginationMeta, SubscriptionRequest, SubscriptionResponse,
+        },
         entity::{ActiveSubscription, Subscription},
-        subscription_dto::{Pagination, PaginationMeta, SubscriptionRequest, SubscriptionResponse},
     },
     AppError, AppResult,
 };

@@ -3,7 +3,8 @@ use axum::{
     extract::{Form, FromRequest, Request},
     http::StatusCode,
 };
-use serde::Deserialize;
+use sea_orm::{DerivePartialModel, FromQueryResult};
+use serde::{Deserialize, Serialize};
 use utils::validator::{is_valid_email, is_valid_name};
 
 #[derive(Debug, Deserialize)]
@@ -65,5 +66,47 @@ where
             return Err(AppError::new(StatusCode::BAD_REQUEST, "邮箱格式不正确"));
         }
         Ok(sub)
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct SubscriptionResponseMeta {
+    count: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PaginationMeta {
+    total_page: usize,
+    limit: usize,
+    current_page: usize,
+    current_page_size: usize,
+}
+
+impl PaginationMeta {
+    pub fn new(
+        total_page: usize,
+        limit: usize,
+        current_page: usize,
+        current_page_size: usize,
+    ) -> Self {
+        Self {
+            total_page,
+            limit,
+            current_page,
+            current_page_size,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, DerivePartialModel, FromQueryResult)]
+#[sea_orm(entity = "crate::model::entity::Subscription")]
+pub struct SubscriptionResponse {
+    pub name: String,
+    pub email: String,
+}
+
+impl SubscriptionResponseMeta {
+    pub fn new(count: usize) -> Self {
+        Self { count }
     }
 }

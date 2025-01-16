@@ -1,2 +1,2 @@
+pub mod dto;
 pub mod entity;
-pub mod subscription_dto;
